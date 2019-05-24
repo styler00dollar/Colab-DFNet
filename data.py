@@ -38,16 +38,14 @@ class DS(Dataset):
     def random_mask(height=256, width=256,
                     min_stroke=1, max_stroke=4,
                     min_vertex=1, max_vertex=12,
-                    min_length_divisor=10, max_length_divisor=18,
                     min_brush_width_divisor=16, max_brush_width_divisor=10):
         mask = np.ones((height, width))
 
-        min_length = height // min_length_divisor
-        max_length = height // max_length_divisor
         min_brush_width = height // min_brush_width_divisor
         max_brush_width = height // max_brush_width_divisor
         max_angle = 2*np.pi
         num_stroke = np.random.randint(min_stroke, max_stroke+1)
+        average_length = np.sqrt(height*height + width*width) / 8
 
         for _ in range(num_stroke):
             num_vertex = np.random.randint(min_vertex, max_vertex+1)
@@ -56,7 +54,7 @@ class DS(Dataset):
 
             for _ in range(num_vertex):
                 angle = np.random.uniform(max_angle)
-                length = np.random.uniform(min_length, max_length)
+                length = np.clip(np.random.normal(average_length, average_length//2), 0, 2*average_length)
                 brush_width = np.random.randint(min_brush_width, max_brush_width+1)
                 end_x = (start_x + length * np.sin(angle)).astype(np.int32)
                 end_y = (start_y + length * np.cos(angle)).astype(np.int32)
@@ -64,4 +62,8 @@ class DS(Dataset):
                 cv2.line(mask, (start_y, start_x), (end_y, end_x), 0., brush_width)
 
                 start_x, start_y = end_x, end_y
+        if np.random.random() < 0.5:
+            mask = np.fliplr(mask)
+        if np.random.random() < 0.5:
+            mask = np.flipud(mask)
         return mask.reshape((1,)+mask.shape).astype(np.float32) 
