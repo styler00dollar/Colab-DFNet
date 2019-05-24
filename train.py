@@ -43,7 +43,7 @@ parser.add_argument('--log_dir', type=str, default='./logs/default')
 parser.add_argument('--lr', type=float, default=2e-3)
 parser.add_argument('--max_iter', type=int, default=200000)
 parser.add_argument('--batch_size', type=int, default=6)
-parser.add_argument('--n_threads', type=int, default=6)
+parser.add_argument('--n_threads', type=int, default=16)
 parser.add_argument('--save_model_interval', type=int, default=1000)
 parser.add_argument('--vis_interval', type=int, default=1000)
 parser.add_argument('--log_interval', type=int, default=10)
@@ -63,6 +63,7 @@ writer = SummaryWriter(logdir=args.log_dir)
 size = (args.image_size, args.image_size)
 img_tf = transforms.Compose([
     transforms.Resize(size=size),
+    transforms.RandomHorizontalFlip(),
     transforms.ToTensor()
 ])
 

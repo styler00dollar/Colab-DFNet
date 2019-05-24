@@ -64,7 +64,7 @@ class InpaintingLoss(nn.Module):
         super().__init__()
 
         self.l1 = nn.L1Loss()
-        self.perc = PerceptualLoss()
+        self.content = PerceptualLoss()
         self.style = StyleLoss()
         self.p = p
         self.q = q
@@ -87,7 +87,7 @@ class InpaintingLoss(nn.Module):
             out = input[i]
             gt_res = resize_like(gt, out)
 
-            loss_prc = self.perc(out, gt_res)
+            loss_prc = self.content(out, gt_res)
 
             loss_style = self.style(out, gt_res)
 
