@@ -1,5 +1,3 @@
-#@title metrics.py
-%%writefile /content/DFNet/metrics.py
 #https://github.com/huster-wgm/Pytorch-metrics/blob/master/metrics.py
 
 #!/usr/bin/env python

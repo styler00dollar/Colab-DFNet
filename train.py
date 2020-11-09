@@ -47,7 +47,7 @@ parser.add_argument('--max_iter', type=int, default=200000)
 parser.add_argument('--batch_size', type=int, default=6)
 parser.add_argument('--n_threads', type=int, default=16)
 parser.add_argument('--save_model_interval', type=int, default=1000)
-parser.add_argument('--vis_interval', type=int, default=1000)
+parser.add_argument('--vis_interval', type=int, default=100)
 parser.add_argument('--log_interval', type=int, default=10)
 parser.add_argument('--image_size', type=int, default=256)
 parser.add_argument('--resume', type=str)
@@ -94,7 +94,26 @@ for i in tqdm(range(start_iter, args.max_iter)):
     model.train()
 
     img, mask = [x.to(device) for x in next(iterator_train)]
+
+    # inpainting
     masked = img * mask
+
+
+    # mosaic
+    """
+    MOSAIC_MIN = 0.01
+    MOSAIC_MID =  0.2
+    MOSAIC_MAX = 0.0625
+
+    mosaic_size = int(random.triangular(int(min(256*MOSAIC_MIN, 256*MOSAIC_MIN)), int(min(256*MOSAIC_MID, 256*MOSAIC_MID)), int(min(256*MOSAIC_MAX, 256*MOSAIC_MAX))))
+    images_mosaic = nnf.interpolate(img, size=(mosaic_size, mosaic_size), mode='nearest')
+    images_mosaic = nnf.interpolate(images_mosaic, size=(256, 256), mode='nearest')
+    masked = (img * (1 - mask).float()) + (images_mosaic * (mask).float())
+    """
+
+
+
+
 
     results, alpha, raw = model(masked, mask)
 
@@ -153,4 +172,5 @@ for i in tqdm(range(start_iter, args.max_iter)):
     if (i + 1) % 10000:
         scheduler.step()
 
+    # amp
     scaler.update()
