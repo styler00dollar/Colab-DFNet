@@ -4,6 +4,9 @@
 - It's pretty alpha and not very flexible, but works.
 - Testing/Training in Colab possible, since training Code is available in [Yukariin/DFNet](https://github.com/Yukariin/DFNet). Thank you Yukariin.
 - Attempt to add [Differentiable Augmentation](https://github.com/mit-han-lab/data-efficient-gans).
+- TensorboardX
+- Added loss functions.
+- Added image metrics.
 
 ## Introduction
 
