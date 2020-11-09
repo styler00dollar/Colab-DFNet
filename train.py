@@ -108,7 +108,8 @@ for i in tqdm(range(start_iter, args.max_iter)):
     mosaic_size = int(random.triangular(int(min(256*MOSAIC_MIN, 256*MOSAIC_MIN)), int(min(256*MOSAIC_MID, 256*MOSAIC_MID)), int(min(256*MOSAIC_MAX, 256*MOSAIC_MAX))))
     images_mosaic = nnf.interpolate(img, size=(mosaic_size, mosaic_size), mode='nearest')
     images_mosaic = nnf.interpolate(images_mosaic, size=(256, 256), mode='nearest')
-    masked = (img * (1 - mask).float()) + (images_mosaic * (mask).float())
+    #masked = (img * (1 - mask).float()) + (images_mosaic * (mask).float())
+    masked = (images_mosaic * (1 - mask).float()) + (img * (mask).float())
     """
 
 
