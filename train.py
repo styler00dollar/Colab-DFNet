@@ -1,3 +1,5 @@
+from diffaug import *
+
 import argparse
 import os
 
@@ -95,15 +97,51 @@ for i in tqdm(range(start_iter, args.max_iter)):
     masked = img * mask
 
     results, alpha, raw = model(masked, mask)
-    loss = criterion(results, img)
 
+    # Diffaugment
+    img0 = DiffAugment(img[0], policy=policy)
+    img1 = DiffAugment(img[1], policy=policy)
+    #img2 = DiffAugment(img[2], policy=policy)
+    #img3 = DiffAugment(img[3], policy=policy)
+    #img4 = DiffAugment(img[4], policy=policy)
+    #img5 = DiffAugment(img[5], policy=policy)
+    """
+    results0 = DiffAugment(results[0], policy=policy)
+    results1 = DiffAugment(results[1], policy=policy)
+    results2 = DiffAugment(results[2], policy=policy)
+    results3 = DiffAugment(results[3], policy=policy)
+    results4 = DiffAugment(results[4], policy=policy)
+    results5 = DiffAugment(results[5], policy=policy)
+    results[0] = results0
+    results[1] = results1
+    results[2] = results2
+    results[3] = results3
+    results[4] = results4
+    results[5] = results5
+    """
+    #test_img = torch.stack((img0[0], img1[0], img2[0], img3[0], img4[0], img5[0]))
+    test_img = torch.stack((img0[0], img1[0]))
+
+    with torch.cuda.amp.autocast():
+      loss = criterion(results, test_img, i)
+
+    """
+    # no amp
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+    """
 
+
+    # amp
+    scaler.scale(loss).backward()
+    scaler.step(optimizer)
+    optimizer.zero_grad()
+
+    """
     if (i + 1) % args.log_interval == 0:
         writer.add_scalar('loss', loss.item(), i + 1)
-
+    """
     if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
         torch.save(model.state_dict(), '{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1))
 
@@ -114,3 +152,5 @@ for i in tqdm(range(start_iter, args.max_iter)):
 
     if (i + 1) % 10000:
         scheduler.step()
+
+    scaler.update()
