@@ -119,8 +119,8 @@ for i in tqdm(range(start_iter, args.max_iter)):
     results, alpha, raw = model(masked, mask)
 
     # Diffaugment
-    img0 = DiffAugment(img[0], policy=policy)
-    img1 = DiffAugment(img[1], policy=policy)
+    #img0 = DiffAugment(img[0], policy=policy)
+    #img1 = DiffAugment(img[1], policy=policy)
     #img2 = DiffAugment(img[2], policy=policy)
     #img3 = DiffAugment(img[3], policy=policy)
     #img4 = DiffAugment(img[4], policy=policy)
@@ -140,10 +140,10 @@ for i in tqdm(range(start_iter, args.max_iter)):
     results[5] = results5
     """
     #test_img = torch.stack((img0[0], img1[0], img2[0], img3[0], img4[0], img5[0]))
-    test_img = torch.stack((img0[0], img1[0]))
+    #test_img = torch.stack((img0[0], img1[0]))
 
     with torch.cuda.amp.autocast():
-      loss = criterion(results, test_img, i)
+      loss = criterion(results, img, i)
 
     """
     # no amp
