@@ -41,10 +41,10 @@ class InfiniteSampler(data.sampler.Sampler):
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=str, default='/srv/datasets/Places2')
 parser.add_argument('--save_dir', type=str, default='./snapshots/default')
-parser.add_argument('--log_dir', type=str, default='./logs/default')
+#parser.add_argument('--log_dir', type=str, default='./logs/default')
 parser.add_argument('--lr', type=float, default=2e-3)
 parser.add_argument('--max_iter', type=int, default=200000)
-parser.add_argument('--batch_size', type=int, default=6)
+parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--n_threads', type=int, default=16)
 parser.add_argument('--save_model_interval', type=int, default=1000)
 parser.add_argument('--vis_interval', type=int, default=100)
@@ -60,7 +60,7 @@ if not os.path.exists(args.save_dir):
     os.makedirs('{:s}/images'.format(args.save_dir))
     os.makedirs('{:s}/ckpt'.format(args.save_dir))
 
-writer = SummaryWriter(logdir=args.log_dir)
+#writer = SummaryWriter(logdir=args.log_dir)
 
 size = (args.image_size, args.image_size)
 img_tf = transforms.Compose([
@@ -162,6 +162,7 @@ for i in tqdm(range(start_iter, args.max_iter)):
     if (i + 1) % args.log_interval == 0:
         writer.add_scalar('loss', loss.item(), i + 1)
     """
+
     if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
         torch.save(model.state_dict(), '{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1))
 

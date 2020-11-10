@@ -3,6 +3,8 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
+
 import torch
 from torch.utils.data import Dataset
 
@@ -33,7 +35,7 @@ class DS(Dataset):
         mask = torch.from_numpy(mask)
 
         return sample, mask
-    
+
     @staticmethod
     def random_mask(height=256, width=256,
                     min_stroke=1, max_stroke=4,
@@ -66,4 +68,4 @@ class DS(Dataset):
             mask = np.fliplr(mask)
         if np.random.random() < 0.5:
             mask = np.flipud(mask)
-        return mask.reshape((1,)+mask.shape).astype(np.float32) 
+        return mask.reshape((1,)+mask.shape).astype(np.float32)

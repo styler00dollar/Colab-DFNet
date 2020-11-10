@@ -93,7 +93,7 @@ class StyleLoss(nn.Module):
         return style_loss
 
 class InpaintingLoss(nn.Module):
-    def __init__(self, p=[0, 1, 2], q=[0, 1, 2],
+    def __init__(self, p=[0, 1], q=[0, 1],
                  w=[6., 0.1, 240., 0.1]):
         super().__init__()
 
@@ -160,14 +160,14 @@ class InpaintingLoss(nn.Module):
         for i in self.p:
           out = input[i]
           gt_res = resize_like(gt, out)
-
+          """
           (b, ch, h, w) = out.size()
           loss_rec = self.l1(out, gt_res) / (ch * h * w)
 
           l1_forward = (self.w[0] * loss_rec)
           writer.add_scalar('l1', l1_forward, iteration)
           total_loss += l1_forward
-
+          """
 
           #for i in self.q:
           #out = input[i]
@@ -184,7 +184,7 @@ class InpaintingLoss(nn.Module):
           total_loss += total_variation_loss_forward
 
           # new loss
-
+          """
           HFENLoss_forward = self.HFENLoss(out, gt_res)
           writer.add_scalar('loss/HFEN', HFENLoss_forward, iteration)
           total_loss += HFENLoss_forward
@@ -196,11 +196,11 @@ class InpaintingLoss(nn.Module):
           RelativeL1_forward = self.RelativeL1(out, gt_res)
           writer.add_scalar('loss/RelativeL1', HFENLoss_forward, iteration)
           total_loss += RelativeL1_forward
-
+          """
           L1CosineSim_forward = self.L1CosineSim(out, gt_res)
-          writer.add_scalar('loss/L1CosineSim', HFENLoss_forward, iteration)
+          writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
           total_loss += L1CosineSim_forward
-
+          """
           ClipL1_forward = self.ClipL1(out, gt_res)
           writer.add_scalar('loss/ClipL1', ClipL1_forward, iteration)
           total_loss += ClipL1_forward
@@ -224,7 +224,7 @@ class InpaintingLoss(nn.Module):
           Contextual_Loss_forward = self.Contextual_Loss(out, gt_res)
           writer.add_scalar('loss/Contextual', Contextual_Loss_forward, iteration)
           total_loss += Contextual_Loss_forward
-
+          """
           #total_loss += loss_rec + loss_PerceptualLoss + loss_style
         #loss_text += (self.w[1] * loss_prc) + (self.w[2] * loss_style) + (self.w[3] * loss_tv)
 
