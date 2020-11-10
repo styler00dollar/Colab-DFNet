@@ -16,6 +16,15 @@ from torchvision import models
 from utils import resize_like
 from metrics import *
 
+
+def gram_matrix(y):
+    # https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/utils.py
+    (b, ch, h, w) = y.size()
+    features = y.view(b, ch, w * h)
+    features_t = features.transpose(1, 2)
+    gram = features.bmm(features_t) / (ch * h * w)
+    return gram
+
 class VGG16(torch.nn.Module):
     def __init__(self):
         super().__init__()
