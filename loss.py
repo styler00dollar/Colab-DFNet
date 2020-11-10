@@ -241,7 +241,7 @@ class InpaintingLoss(nn.Module):
           #writer.add_scalar('metrics/SSIM', ae_metric(gt_res, out), iteration)
 
           # MSE (Mean Square Error)
-          writer.add_scalar('metrics/SSIM', self.mse_metric(gt_res, out), iteration)
+          writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
 
           # LPIPS (Learned Perceptual Image Patch Similarity)
           #writer.add_scalar('metrics/SSIM', lpips_metric(gt_res, out), iteration)
