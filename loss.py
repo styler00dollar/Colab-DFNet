@@ -16,7 +16,6 @@ from torchvision import models
 from utils import resize_like
 from metrics import *
 
-
 def gram_matrix(y):
     # https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/utils.py
     (b, ch, h, w) = y.size()
@@ -102,7 +101,7 @@ class StyleLoss(nn.Module):
         return style_loss
 
 class InpaintingLoss(nn.Module):
-    def __init__(self, p=[0, 1], q=[0, 1],
+    def __init__(self, p=[0, 1, 2,3,4,5], q=[0, 1, 2,3,4,5],
                  w=[6., 0.1, 240., 0.1]):
         super().__init__()
 
@@ -166,6 +165,11 @@ class InpaintingLoss(nn.Module):
         total_loss = 0.0
         #loss_text = 0.0
 
+        PerceptualLoss_forward = 0
+        style_loss_forward = 0
+        total_variation_loss_forward = 0
+        L1CosineSim_forward = 0
+
         for i in self.p:
           out = input[i]
           gt_res = resize_like(gt, out)
@@ -182,15 +186,19 @@ class InpaintingLoss(nn.Module):
           #out = input[i]
           #gt_res = resize_like(gt, out)
 
-          PerceptualLoss_forward = self.content(out, gt_res) # loss_PerceptualLoss
-          writer.add_scalar('loss/Perceptual', PerceptualLoss_forward, iteration)
-          total_loss += PerceptualLoss_forward
+          PerceptualLoss_forward += 0.1*self.content(out, gt_res) # loss_PerceptualLoss
+          
+          #total_loss += PerceptualLoss_forward
 
-          #total_loss += self.style(out, gt_res)
+          style_loss_forward += 240*self.style(out, gt_res)
+          #writer.add_scalar('loss/Style', style_loss, iteration)
+          #total_loss += style_loss
+          
 
-          total_variation_loss_forward = total_variation_loss(out) #tv
-          writer.add_scalar('loss/TV', total_variation_loss_forward, iteration)
-          total_loss += total_variation_loss_forward
+          total_variation_loss_forward = 0.1*total_variation_loss(out) #tv
+          
+          #writer.add_scalar('loss/TV', total_variation_loss_forward, iteration)
+          #total_loss += total_variation_loss_forward
 
           # new loss
           """
@@ -206,9 +214,10 @@ class InpaintingLoss(nn.Module):
           writer.add_scalar('loss/RelativeL1', HFENLoss_forward, iteration)
           total_loss += RelativeL1_forward
           """
-          L1CosineSim_forward = self.L1CosineSim(out, gt_res)
-          writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
-          total_loss += L1CosineSim_forward
+          L1CosineSim_forward += 6*self.L1CosineSim(out, gt_res)
+          
+          #writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
+          #total_loss += L1CosineSim_forward
           """
           ClipL1_forward = self.ClipL1(out, gt_res)
           writer.add_scalar('loss/ClipL1', ClipL1_forward, iteration)
@@ -226,7 +235,7 @@ class InpaintingLoss(nn.Module):
           writer.add_scalar('loss/GPLoss', GPLoss_forward, iteration)
           total_loss += GPLoss_forward
 
-          CPLoss_forward = self.CPLoss(out, gt_res)
+          CPLoss_forward = 0.1*self.CPLoss(out, gt_res)
           writer.add_scalar('loss/CPLoss', CPLoss_forward, iteration)
           total_loss += CPLoss_forward
 
@@ -234,40 +243,59 @@ class InpaintingLoss(nn.Module):
           writer.add_scalar('loss/Contextual', Contextual_Loss_forward, iteration)
           total_loss += Contextual_Loss_forward
           """
-          #total_loss += loss_rec + loss_PerceptualLoss + loss_style
+
+
+
+
+
+
+        writer.add_scalar('loss/Perceptual', PerceptualLoss_forward, iteration)
+        writer.add_scalar('loss/Style', style_loss_forward, iteration)
+        writer.add_scalar('loss/TV', total_variation_loss_forward, iteration)
+        writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
+
+        total_loss = PerceptualLoss_forward + style_loss_forward + total_variation_loss_forward + L1CosineSim_forward
+
+        #total_loss += loss_rec + loss_PerceptualLoss + loss_style
         #loss_text += (self.w[1] * loss_prc) + (self.w[2] * loss_style) + (self.w[3] * loss_tv)
 
 
-          writer.add_scalar('Total', total_loss, iteration)
+        writer.add_scalar('Total', total_loss, iteration)
 
-          # PSNR (Peak Signal-to-Noise Ratio)
-          writer.add_scalar('metrics/PSNR', self.psnr_metric(gt_res, out), iteration)
+        # PSNR (Peak Signal-to-Noise Ratio)
+        writer.add_scalar('metrics/PSNR', self.psnr_metric(gt_res, out), iteration)
 
-          # SSIM (Structural Similarity)
-          writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
+        # SSIM (Structural Similarity)
+        #writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
 
-          # AE (Average Angular Error)
-          #writer.add_scalar('metrics/SSIM', ae_metric(gt_res, out), iteration)
+        # AE (Average Angular Error)
+        #writer.add_scalar('metrics/SSIM', ae_metric(gt_res, out), iteration)
 
-          # MSE (Mean Square Error)
-          writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
+        # MSE (Mean Square Error)
+        writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
 
-          # LPIPS (Learned Perceptual Image Patch Similarity)
-          #writer.add_scalar('metrics/SSIM', lpips_metric(gt_res, out), iteration)
-
+        # LPIPS (Learned Perceptual Image Patch Similarity)
+        #writer.add_scalar('metrics/SSIM', lpips_metric(gt_res, out), iteration)
 
         """
+
         # two loops, like the original code here: https://github.com/Yukariin/DFNet/blob/master/loss.py
         total_loss = 0.0
+        loss_rec_total = 0.0
+        perceptual_forward_total = 0.0
+        style_forward_total = 0.0
+        tv_forward_total = 0.0
+        
         for i in self.p:
             out = input[i]
             gt_res = resize_like(gt, out)
 
             (b, ch, h, w) = out.size()
-            #loss_rec = self.l1(out, gt_res) / (ch * h * w)
-            #total_loss += (self.w[0] * loss_rec)
-
-            total_loss += self.L1CosineSim(out, gt_res)
+            loss_rec = self.l1(out, gt_res) / (ch * h * w)
+            loss_rec_total += (6 * loss_rec)
+            #writer.add_scalar('loss/loss_rec', 6 * loss_rec, iteration)
+            
+            #total_loss += self.L1CosineSim(out, gt_res)
 
             #total_loss += self.RelativeL1(out, gt_res)
 
@@ -278,17 +306,23 @@ class InpaintingLoss(nn.Module):
             out = input[i]
             gt_res = resize_like(gt, out)
 
-            total_loss += self.content(out, gt_res) # loss_PerceptualLoss
+            perceptual_forward = 0.1*self.content(out, gt_res) # loss_PerceptualLoss
+            perceptual_forward_total += perceptual_forward
+            #writer.add_scalar('loss/perceptual', perceptual_forward, iteration)
 
-            total_loss += self.style(out, gt_res)
+            style_forward = 240*self.style(out, gt_res)
+            style_forward_total += style_forward
+            #writer.add_scalar('loss/style', style_forward, iteration)
 
-            total_loss += total_variation_loss(out) #tv
+            tv_forward = 0.1*total_variation_loss(out) #tv
+            tv_forward_total += tv_forward
+            #writer.add_scalar('loss/tv', tv_forward, iteration)
 
             # new loss
 
-            total_loss += self.HFENLoss(out, gt_res)
+            #total_loss += self.HFENLoss(out, gt_res)
 
-            total_loss += self.ElasticLoss(out, gt_res)
+            #total_loss += self.ElasticLoss(out, gt_res)
 
             #total_loss += self.RelativeL1(out, gt_res)
 
@@ -296,13 +330,38 @@ class InpaintingLoss(nn.Module):
 
             #total_loss += self.ClipL1(out, gt_res)
 
-            total_loss += self.FFTloss(out, gt_res)
+            #total_loss += self.FFTloss(out, gt_res)
 
-            total_loss += self.OFLoss(out)
+            #total_loss += self.OFLoss(out)
 
-            total_loss += self.GPLoss(out, gt_res)
+            #total_loss += self.GPLoss(out, gt_res)
 
-            total_loss += self.CPLoss(out, gt_res)
+            #total_loss += self.CPLoss(out, gt_res)
+
+
+        writer.add_scalar('loss/loss_rec', loss_rec_total, iteration)
+        writer.add_scalar('loss/perceptual', perceptual_forward_total, iteration)
+        writer.add_scalar('loss/style', style_forward_total, iteration)
+        writer.add_scalar('loss/tv', tv_forward_total, iteration)
+
+        total_loss = loss_rec_total + perceptual_forward_total + style_forward_total + tv_forward_total
+        writer.add_scalar('Total', total_loss, iteration)
+
+
+		# PSNR (Peak Signal-to-Noise Ratio)
+        writer.add_scalar('metrics/PSNR', self.psnr_metric(gt_res, out), iteration)
+
+		# SSIM (Structural Similarity)
+		#writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
+
+		# AE (Average Angular Error)
+		#writer.add_scalar('metrics/SSIM', ae_metric(gt_res, out), iteration)
+
+		# MSE (Mean Square Error)
+        writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
+
+		# LPIPS (Learned Perceptual Image Patch Similarity)
+		#writer.add_scalar('metrics/SSIM', lpips_metric(gt_res, out), iteration)
         """
 
         #return loss_struct + loss_text

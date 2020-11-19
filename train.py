@@ -39,16 +39,16 @@ class InfiniteSampler(data.sampler.Sampler):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--root', type=str, default='/srv/datasets/Places2')
-parser.add_argument('--save_dir', type=str, default='./snapshots/default')
+parser.add_argument('--root', type=str, default='/path/')
+parser.add_argument('--save_dir', type=str, default='/path/')
 #parser.add_argument('--log_dir', type=str, default='./logs/default')
 parser.add_argument('--lr', type=float, default=2e-3)
-parser.add_argument('--max_iter', type=int, default=200000)
-parser.add_argument('--batch_size', type=int, default=2)
+parser.add_argument('--max_iter', type=int, default=2000000)
+parser.add_argument('--batch_size', type=int, default=6)
 parser.add_argument('--n_threads', type=int, default=16)
-parser.add_argument('--save_model_interval', type=int, default=1000)
-parser.add_argument('--vis_interval', type=int, default=100)
-parser.add_argument('--log_interval', type=int, default=10)
+parser.add_argument('--save_model_interval', type=int, default=5000)
+parser.add_argument('--vis_interval', type=int, default=1000)
+parser.add_argument('--log_interval', type=int, default=1)
 parser.add_argument('--image_size', type=int, default=256)
 parser.add_argument('--resume', type=str)
 args = parser.parse_args()
@@ -142,22 +142,22 @@ for i in tqdm(range(start_iter, args.max_iter)):
     #test_img = torch.stack((img0[0], img1[0], img2[0], img3[0], img4[0], img5[0]))
     #test_img = torch.stack((img0[0], img1[0]))
 
-    with torch.cuda.amp.autocast():
-      loss = criterion(results, img, i)
+    #with torch.cuda.amp.autocast():
+    loss = criterion(results, img, i)
 
-    """
+
     # no amp
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+
     """
-
-
     # amp
     scaler.scale(loss).backward()
     scaler.step(optimizer)
     optimizer.zero_grad()
-
+    """
     """
     if (i + 1) % args.log_interval == 0:
         writer.add_scalar('loss', loss.item(), i + 1)
@@ -175,4 +175,4 @@ for i in tqdm(range(start_iter, args.max_iter)):
         scheduler.step()
 
     # amp
-    scaler.update()
+    #scaler.update()
