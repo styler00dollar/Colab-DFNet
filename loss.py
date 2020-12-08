@@ -174,7 +174,7 @@ class InpaintingLoss(nn.Module):
         #writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
 
         # AE (Average Angular Error)
-        #writer.add_scalar('metrics/SSIM', ae_metric(gt_res, out), iteration)
+        #writer.add_scalar('metrics/AE', ae_metric(gt_res, out), iteration)
 
         # MSE (Mean Square Error)
         #writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
