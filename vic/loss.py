@@ -913,3 +913,29 @@ class Contextual_Loss(nn.Module):
         if torch.isnan(CX_loss):
             raise ValueError('NaN in computing CX_loss')
         return CX_loss
+
+
+# https://github.com/Yukariin/DFNet/blob/master/loss.py
+def gram_matrix(y):
+    # https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/utils.py
+    (b, ch, h, w) = y.size()
+    features = y.view(b, ch, w * h)
+    features_t = features.transpose(1, 2)
+    gram = features.bmm(features_t) / (ch * h * w)
+    return gram
+
+class StyleLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.add_module('vgg', VGG16())
+        self.criterion = nn.L1Loss()
+
+    def forward(self, x, y):
+        x_vgg, y_vgg = self.vgg(x), self.vgg(y)
+
+        style_loss = 0.0
+        for x_feat, y_feat in zip(x_vgg, y_vgg):
+            style_loss += self.criterion(gram_matrix(x_feat), gram_matrix(y_feat))
+
+        return style_loss
