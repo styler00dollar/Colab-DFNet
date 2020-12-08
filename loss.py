@@ -1,3 +1,5 @@
+resume_iteration = 0
+
 from vic.loss import CharbonnierLoss, GANLoss, GradientPenaltyLoss, HFENLoss, TVLoss, GradientLoss, ElasticLoss, RelativeL1, L1CosineSim, ClipL1, MaskedL1Loss, MultiscalePixelLoss, FFTloss, OFLoss, L1_regularization, ColorLoss, AverageLoss, GPLoss, CPLoss, SPL_ComputeWithTrace, SPLoss, Contextual_Loss, StyleLoss
 from vic.perceptual_loss import PerceptualLoss
 from vic.filters import *
@@ -80,14 +82,9 @@ class InpaintingLoss(nn.Module):
 
         self.psnr_metric = PSNR()
         self.ssim_metric = SSIM()
-        #self.ae_metric = AE()
+        self.ae_metric = AE()
         self.mse_metric = MSE()
 
-
-        self.p = p
-        self.q = q
-        self.w = w
-        self.counter = 0
 
     def forward(self, input, gt, iteration):
 
@@ -98,14 +95,18 @@ class InpaintingLoss(nn.Module):
         perceptual_forward = 0.0
         style_forward = 0.0
         tv_forward = 0.0
+        PSNR_value = 0.0
 
 
-        # default batchsize 6
+        # Input batchsize here
         for i in range(6):
           out = input[0][i]
-
-
           gt_res = gt[i]
+
+          #gt_res = resize_like(gt, out)
+
+          out = out.unsqueeze(0)
+          gt_res = gt_res.unsqueeze(0)
 
           # new loss
           """
@@ -119,6 +120,7 @@ class InpaintingLoss(nn.Module):
           total_loss += RelativeL1_forward
           """
           L1CosineSim_forward += 6*self.L1CosineSim(out, gt_res)
+          #total_loss += L1CosineSim_forward
 
           #writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
           #total_loss += L1CosineSim_forward
@@ -141,17 +143,17 @@ class InpaintingLoss(nn.Module):
           Contextual_Loss_forward = self.Contextual_Loss(out, gt_res)
           total_loss += Contextual_Loss_forward
           """
-          out = out.unsqueeze(0)
-          gt_res = gt_res.unsqueeze(0)
 
           style_forward += 240*self.StyleLoss(out, gt_res)
-          total_loss += style_forward
+          #total_loss += style_forward
 
           tv_forward += 0.1*self.TVLoss(out)
-          total_loss += tv_forward
+          #total_loss += tv_forward
 
           perceptual_forward += 0.1*self.PerceptualLoss(out, gt_res)
-          total_loss += perceptual_forward
+          #total_loss += perceptual_forward
+
+          PSNR_value += self.psnr_metric(gt_res, out)
 
 
         writer.add_scalar('loss/Perceptual', perceptual_forward, iteration)
@@ -167,19 +169,22 @@ class InpaintingLoss(nn.Module):
 
         writer.add_scalar('Total', total_loss, iteration)
 
+
         # PSNR (Peak Signal-to-Noise Ratio)
         #writer.add_scalar('metrics/PSNR', self.psnr_metric(gt_res, out), iteration)
+        writer.add_scalar('metrics/PSNR', PSNR_value, iteration+resume_iteration)
 
         # SSIM (Structural Similarity)
-        #writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
+        writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
 
         # AE (Average Angular Error)
-        #writer.add_scalar('metrics/AE', ae_metric(gt_res, out), iteration)
+        writer.add_scalar('metrics/AE', self.ae_metric(gt_res, out), iteration)
 
         # MSE (Mean Square Error)
-        #writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
+        writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
 
         # LPIPS (Learned Perceptual Image Patch Similarity)
+        # pip install LPIPS
         #writer.add_scalar('metrics/SSIM', lpips_metric(gt_res, out), iteration)
 
         return total_loss

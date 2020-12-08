@@ -1,5 +1,7 @@
 #from diffaug import *
 
+resume_iteration = 0
+
 import argparse
 import os
 
@@ -44,11 +46,11 @@ parser.add_argument('--root', type=str, default='/path/')
 parser.add_argument('--save_dir', type=str, default='/path/')
 #parser.add_argument('--log_dir', type=str, default='./logs/default')
 parser.add_argument('--lr', type=float, default=2e-3)
-parser.add_argument('--max_iter', type=int, default=2000000)
-parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--max_iter', type=int, default=5000000)
+parser.add_argument('--batch_size', type=int, default=6)
 parser.add_argument('--n_threads', type=int, default=16)
 parser.add_argument('--save_model_interval', type=int, default=500)
-parser.add_argument('--vis_interval', type=int, default=50)
+parser.add_argument('--vis_interval', type=int, default=500)
 parser.add_argument('--log_interval', type=int, default=1)
 parser.add_argument('--image_size', type=int, default=256)
 parser.add_argument('--resume', type=str)
@@ -137,12 +139,12 @@ for i in tqdm(range(start_iter, args.max_iter)):
     """
 
     if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
-        torch.save(model.state_dict(), '{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1))
+        torch.save(model.state_dict(), '{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1 + resume_iteration))
 
     if (i + 1) % args.vis_interval == 0:
         s_img = torch.cat([img, masked, results[0]])
         s_img = make_grid(s_img, nrow=args.batch_size)
-        save_image(s_img, '{:s}/images/test_{:d}.png'.format(args.save_dir, i + 1))
+        save_image(s_img, '{:s}/images/test_{:d}.png'.format(args.save_dir, i + 1 + resume_iteration))
 
     if (i + 1) % 10000:
         scheduler.step()

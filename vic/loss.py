@@ -916,6 +916,7 @@ class Contextual_Loss(nn.Module):
 
 # https://github.com/Yukariin/DFNet/blob/master/loss.py
 from torchvision import models
+from collections import namedtuple
 
 class VGG16(torch.nn.Module):
     def __init__(self):
