@@ -9,7 +9,7 @@ from vic.discriminators import *
 
 from tensorboardX import SummaryWriter
 
-logdir='/content/drive/MyDrive/Colab-DFNet'
+logdir='/path/'
 
 writer = SummaryWriter(logdir=logdir)
 
@@ -99,7 +99,7 @@ class InpaintingLoss(nn.Module):
 
 
         # Input batchsize here
-        for i in range(6):
+        for i in range(24):
           out = input[0][i]
           gt_res = gt[i]
 
@@ -119,7 +119,7 @@ class InpaintingLoss(nn.Module):
           RelativeL1_forward = self.RelativeL1(out, gt_res)
           total_loss += RelativeL1_forward
           """
-          L1CosineSim_forward += 6*self.L1CosineSim(out, gt_res)
+          L1CosineSim_forward += 5*self.L1CosineSim(out, gt_res)
           #total_loss += L1CosineSim_forward
 
           #writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
@@ -147,19 +147,19 @@ class InpaintingLoss(nn.Module):
           style_forward += 240*self.StyleLoss(out, gt_res)
           #total_loss += style_forward
 
-          tv_forward += 0.1*self.TVLoss(out)
+          tv_forward += 0.0000005*self.TVLoss(out)
           #total_loss += tv_forward
 
-          perceptual_forward += 0.1*self.PerceptualLoss(out, gt_res)
+          perceptual_forward += 2*self.PerceptualLoss(out, gt_res)
           #total_loss += perceptual_forward
 
           PSNR_value += self.psnr_metric(gt_res, out)
 
 
-        writer.add_scalar('loss/Perceptual', perceptual_forward, iteration)
-        writer.add_scalar('loss/Style', style_forward, iteration)
-        writer.add_scalar('loss/TV', tv_forward, iteration)
-        writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration)
+        writer.add_scalar('loss/Perceptual', perceptual_forward, iteration + resume_iteration)
+        writer.add_scalar('loss/Style', style_forward, iteration + resume_iteration)
+        writer.add_scalar('loss/TV', tv_forward, iteration + resume_iteration)
+        writer.add_scalar('loss/L1CosineSim', L1CosineSim_forward, iteration + resume_iteration)
 
         total_loss = perceptual_forward + style_forward + tv_forward + L1CosineSim_forward
 
@@ -167,21 +167,22 @@ class InpaintingLoss(nn.Module):
         #loss_text += (self.w[1] * loss_prc) + (self.w[2] * loss_style) + (self.w[3] * loss_tv)
 
 
-        writer.add_scalar('Total', total_loss, iteration)
+        writer.add_scalar('Total', total_loss, iteration + resume_iteration)
+        writer.add_scalar('metrics/PSNR', PSNR_value/24, iteration + resume_iteration)
 
 
         # PSNR (Peak Signal-to-Noise Ratio)
         #writer.add_scalar('metrics/PSNR', self.psnr_metric(gt_res, out), iteration)
-        writer.add_scalar('metrics/PSNR', PSNR_value, iteration+resume_iteration)
+        #writer.add_scalar('metrics/PSNR', PSNR_value, iteration+resume_iteration)
 
         # SSIM (Structural Similarity)
-        writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
+        #writer.add_scalar('metrics/SSIM', self.ssim_metric(gt_res, out), iteration)
 
         # AE (Average Angular Error)
-        writer.add_scalar('metrics/AE', self.ae_metric(gt_res, out), iteration)
+        #writer.add_scalar('metrics/AE', self.ae_metric(gt_res, out), iteration)
 
         # MSE (Mean Square Error)
-        writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
+        #writer.add_scalar('metrics/MSE', self.mse_metric(gt_res, out), iteration)
 
         # LPIPS (Learned Perceptual Image Patch Similarity)
         # pip install LPIPS
